@@ -87,8 +87,8 @@ def read_inputs(is_training, args, has_labels=True):
             allow_smaller_final_batch=True if not is_training else False)
       return images, info
     else:
-    #TODO: Raise error
-    pass
+      #TODO: Raise error
+      pass
 
 
 def _train_preprocess(reshaped_image, args):
