@@ -36,12 +36,12 @@ def evaluate(args):
       # Top-5 ID accuracy
       top5acc_id= tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits[0], labels[:,0], 5), tf.float32))
       # Top-3 count accuracy
-      top3acc_cn= tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits[1], labels[:,1], 3), tf.float32)) 
-      # The percent of predictions within +/1 bin 
+      top3acc_cn= tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits[1], labels[:,1], 3), tf.float32))
+      # The percent of predictions within +/1 bin
       one_bin_off_loss = tf.reduce_mean(tf.cast(tf.less_equal(tf.abs(tf.cast(tf.argmax(logits[1], axis=1), tf.float64)-tf.cast(labels[:,1],tf.float64)),1),tf.float32))
-        
+
       # Information about the predictions for saving in a file
-        
+
       # Species Identification
       top5_id = tf.nn.top_k(tf.nn.softmax(logits[0]), 5)
       top5ind_id= top5_id.indices
@@ -70,7 +70,7 @@ def evaluate(args):
       binary_behavior_labels = tf.cast(binary_behavior_labels_logits,tf.bool)
 
       # Compute the size of label sets (for each image separately)
-      y_length = tf.reduce_sum(binary_behavior_labels_logits,axis=0) 
+      y_length = tf.reduce_sum(binary_behavior_labels_logits,axis=0)
       # Compute the size of prediction sets (for each image separately)
       z_length = tf.reduce_sum(binary_behavior_logits,axis=0)
       # Compute the union of the labels set and prediction set
@@ -110,7 +110,7 @@ def evaluate(args):
       prcv_all = 0 # Counts precision of additional attributes
       recv_all = 0 # Counts recall of additional attributes
       total_examples= 0 # Counts number of total examples
- 
+
       one_bin_off_val = 0
       step = 0
       predictions_format_str = ('%d,%s,%s,%s,%s,%s,%s,%s,%s]\n')
@@ -120,7 +120,7 @@ def evaluate(args):
       out_file = open(args.save_predictions,'w')
 
       while step < args.num_batches and not coord.should_stop():
- 
+
         top1_accuracy, top5_accuracy, top3_accuracy, urls_values, label_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf, obol_val, yval, zval, uval, ival = sess.run([top1acc, top5acc_id, top3acc_cn, urls, labels, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh, one_bin_off_loss, y_length, z_length, union_length, intersect_length])
         for i in xrange(0,urls_values.shape[0]):
           out_file.write(predictions_format_str%(step*args.batch_size+i+1, urls_values[i],
@@ -164,7 +164,7 @@ def evaluate(args):
         step += 1
 
       out_file.close()
- 
+
       summary = tf.Summary()
       summary.ParseFromString(sess.run(summary_op))
       coord.request_stop()
@@ -185,7 +185,7 @@ def main():
   parser.add_argument('--architecture', default= 'resnet', help='The DNN architecture')
   parser.add_argument('--depth', default= 50, type= int, help= 'The depth of ResNet architecture')
   parser.add_argument('--log_dir', default= None, action= 'store', help='Path for saving Tensorboard info and checkpoints')
-  parser.add_argument('save_predictions', default= None, action= 'store', help= 'Save predictions of the networks along with their confidence in the specified file')
+  parser.add_argument('--save_predictions', default= None, action= 'store', help= 'Save predictions of the networks along with their confidence in the specified file')
 
   args = parser.parse_args()
   args.num_samples = sum(1 for line in open(args.data_info))
