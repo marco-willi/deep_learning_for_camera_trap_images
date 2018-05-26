@@ -84,9 +84,9 @@ def evaluate(args):
         sys.stdout.flush()
         step += 1
 
-      
+
       out_file.close()
- 
+
       summary = tf.Summary()
       summary.ParseFromString(sess.run(summary_op))
       coord.request_stop()
@@ -108,7 +108,7 @@ def main():
   parser.add_argument('--architecture', default= 'resnet', help='The DNN architecture')
   parser.add_argument('--depth', default= 50, type= int, help= 'The depth of ResNet architecture')
   parser.add_argument('--log_dir', default= None, action= 'store', help='Path for saving Tensorboard info and checkpoints')
-  parser.add_argument('save_predictions', default= None, action= 'store', help= 'Save top-5 predictions of the networks along with their confidence in the specified file')
+  parser.add_argument('--save_predictions', default= None, action= 'store', help= 'Save top-5 predictions of the networks along with their confidence in the specified file')
 
   args = parser.parse_args()
   args.num_samples = sum(1 for line in open(args.data_info))
