@@ -20,7 +20,7 @@ def _read_label_file(file, delimiter):
   return filepaths, labels
 
 # Read input files
-def read_inputs(is_training, args):
+def read_inputs(is_training, args, has_labels=True):
   filepaths, labels = _read_label_file(args.data_info, args.delimiter)
 
   filenames = [os.path.join(args.path_prefix,i) for i in filepaths]
@@ -29,7 +29,10 @@ def read_inputs(is_training, args):
   if is_training:
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= args.shuffle, capacity= 1024)
   else:
-    filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
+     if has_labels:
+         filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
+    else:
+        filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
 
   # Read examples from files in the filename queue.
   file_content = tf.read_file(filename_queue[0])
@@ -38,14 +41,15 @@ def read_inputs(is_training, args):
   # Resize image to 256*256
   reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
 
-  label = tf.cast(filename_queue[1], tf.int64)
+  if has_labels:
+      label = tf.cast(filename_queue[1], tf.int64)
   img_info = filename_queue[0]
 
   if is_training:
     reshaped_image = _train_preprocess(reshaped_image, args)
   else:
     reshaped_image = _test_preprocess(reshaped_image, args)
-    
+
   # Ensure that the random shuffling has good mixing properties.
   min_fraction_of_examples_in_queue = 0.4
   min_queue_examples = int(5000*
@@ -55,23 +59,36 @@ def read_inputs(is_training, args):
          'This may take some times.' % min_queue_examples)
   batch_size = args.chunked_batch_size if is_training else args.batch_size
 
-  # Load images and labels with additional info 
-  if hasattr(args, 'save_predictions') and args.save_predictions is not None:
-    images, label_batch, info = tf.train.batch(
-        [reshaped_image, label, img_info],
-        batch_size= batch_size,
-        num_threads=args.num_threads,
-        capacity=min_queue_examples+3 * batch_size,
-        allow_smaller_final_batch=True if not is_training else False)
-    return images, label_batch, info
-  else:
-    images, label_batch = tf.train.batch(
-        [reshaped_image, label],
-        batch_size= batch_size,
-        allow_smaller_final_batch= True if not is_training else False,
-        num_threads=args.num_threads,
-        capacity=min_queue_examples+3 * batch_size)
-    return images, label_batch
+  # Load images and labels with additional info
+  if has_labels:
+      if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+        images, label_batch, info = tf.train.batch(
+            [reshaped_image, label, img_info],
+            batch_size= batch_size,
+            num_threads=args.num_threads,
+            capacity=min_queue_examples+3 * batch_size,
+            allow_smaller_final_batch=True if not is_training else False)
+        return images, label_batch, info
+      else:
+        images, label_batch = tf.train.batch(
+            [reshaped_image, label],
+            batch_size= batch_size,
+            allow_smaller_final_batch= True if not is_training else False,
+            num_threads=args.num_threads,
+            capacity=min_queue_examples+3 * batch_size)
+        return images, label_batch
+    else:
+      if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+        images, info = tf.train.batch(
+            [reshaped_image, img_info],
+            batch_size= batch_size,
+            num_threads=args.num_threads,
+            capacity=min_queue_examples+3 * batch_size,
+            allow_smaller_final_batch=True if not is_training else False)
+        return images, info
+      else:
+        #TODO: Raise error
+        pass
 
 
 def _train_preprocess(reshaped_image, args):
@@ -115,4 +132,3 @@ def _test_preprocess(reshaped_image, args):
   float_image.set_shape([args.crop_size[0], args.crop_size[1], args.num_channels])
 
   return float_image
-
