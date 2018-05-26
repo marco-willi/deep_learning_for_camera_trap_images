@@ -77,18 +77,18 @@ def read_inputs(is_training, args, has_labels=True):
             num_threads=args.num_threads,
             capacity=min_queue_examples+3 * batch_size)
       return images, label_batch
-    else:
-      if hasattr(args, 'save_predictions') and args.save_predictions is not None:
-        images, info = tf.train.batch(
+  else:
+    if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+      images, info = tf.train.batch(
             [reshaped_image, img_info],
             batch_size= batch_size,
             num_threads=args.num_threads,
             capacity=min_queue_examples+3 * batch_size,
             allow_smaller_final_batch=True if not is_training else False)
-        return images, info
-      else:
-        #TODO: Raise error
-        pass
+      return images, info
+    else:
+    #TODO: Raise error
+    pass
 
 
 def _train_preprocess(reshaped_image, args):
