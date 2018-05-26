@@ -68,9 +68,9 @@ def read_inputs(is_training, args):
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
 
   # Read examples from files in the filename queue.
-  file_content = tf.read_file(filename_queue[0])
+  #file_content = tf.read_file(filename_queue[0])
   # Read JPEG or PNG or GIF image from file
-  reshaped_image = tf.to_float(tf.image.decode_jpeg(file_content, channels=args.num_channels))
+  #reshaped_image = tf.to_float(tf.image.decode_jpeg(file_content, channels=args.num_channels))
   # Resize image to 256*256
   #reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
   reshaped_image = tf.cast(tf.py_func(img_resize, [filename_queue[0]], tf.uint8),tf.float32)
