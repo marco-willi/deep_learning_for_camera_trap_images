@@ -13,13 +13,20 @@ import tensorflow as tf
 def _process_label(label):
     info=np.zeros(8,dtype='int32')
     info[0]=int(label[0]);
-    if label[1]=='51+':
-        info[1]=11
-    elif label[1]=='11-50':
-        info[1]=10
+    #if label[1]=='51+':
+    #    info[1]=11
+    #elif label[1]=='11-50':
+    #    info[1]=10
+    #else:
+    #    info[1]=int(label[1])-1
+    intc= int(label[1])
+    if intc<=10:
+      info[1]= intc-1
+    elif intc>=11 and intc<=50:
+      info[1]= 10
     else:
-        info[1]=int(label[1])-1
-    for i in range(2,8):
+      info[1]= 11
+    for i in range(2, 8):
         info[i]=int(label[i])
     return info
 
@@ -71,7 +78,7 @@ def read_inputs(is_training, args):
          'This may take some times.' % min_queue_examples)
   batch_size = args.chunked_batch_size if is_training else args.batch_size
 
-  # Load images and labels with additional info 
+  # Load images and labels with additional info
   if hasattr(args, 'save_predictions') and args.save_predictions is not None:
     images, label_batch, info = tf.train.batch(
         [reshaped_image, label, img_info],
@@ -131,4 +138,3 @@ def _test_preprocess(reshaped_image, args):
   float_image.set_shape([args.crop_size[0], args.crop_size[1], args.num_channels])
 
   return float_image
-
