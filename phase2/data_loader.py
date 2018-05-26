@@ -8,6 +8,8 @@ import sys
 from six.moves import xrange
 import numpy as np
 import tensorflow as tf
+import scipy.misc
+import matplotlib.image as mpimg
 
 # convert input data to appropriate labels
 def _process_label(label):
@@ -42,6 +44,17 @@ def _read_label_file(file, delimiter):
     labels.append(_process_label(tokens[2:]))
   return filepaths, np.vstack(labels)
 
+
+def img_resize(add):
+  try:
+    img=mpimg.imread(add)
+    img=scipy.misc.imresize(img[0:-100,:],(256,256))
+    return img
+  except:
+    print("Severe Exception for: "+add)
+    return np.zeros((256,256,3),dtype=np.uint8)
+    #raise
+
 def read_inputs(is_training, args):
 
   filepaths, labels = _read_label_file(args.data_info, args.delimiter)
@@ -59,7 +72,8 @@ def read_inputs(is_training, args):
   # Read JPEG or PNG or GIF image from file
   reshaped_image = tf.to_float(tf.image.decode_jpeg(file_content, channels=args.num_channels))
   # Resize image to 256*256
-  reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
+  #reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
+  reshaped_image = tf.cast(tf.py_func(img_resize, [filename_queue[0]], tf.uint8),tf.float32)
 
   label = tf.cast(filename_queue[1], tf.int64)
   img_info = filename_queue[0]
