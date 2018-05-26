@@ -29,10 +29,10 @@ def read_inputs(is_training, args, has_labels=True):
   if is_training:
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= args.shuffle, capacity= 1024)
   else:
-     if has_labels:
-         filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
+    if has_labels:
+      filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
     else:
-        filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
+      filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
 
   # Read examples from files in the filename queue.
   file_content = tf.read_file(filename_queue[0])
@@ -42,7 +42,7 @@ def read_inputs(is_training, args, has_labels=True):
   reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
 
   if has_labels:
-      label = tf.cast(filename_queue[1], tf.int64)
+    label = tf.cast(filename_queue[1], tf.int64)
   img_info = filename_queue[0]
 
   if is_training:
@@ -61,22 +61,22 @@ def read_inputs(is_training, args, has_labels=True):
 
   # Load images and labels with additional info
   if has_labels:
-      if hasattr(args, 'save_predictions') and args.save_predictions is not None:
-        images, label_batch, info = tf.train.batch(
+    if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+      images, label_batch, info = tf.train.batch(
             [reshaped_image, label, img_info],
             batch_size= batch_size,
             num_threads=args.num_threads,
             capacity=min_queue_examples+3 * batch_size,
             allow_smaller_final_batch=True if not is_training else False)
-        return images, label_batch, info
-      else:
-        images, label_batch = tf.train.batch(
+      return images, label_batch, info
+    else:
+      images, label_batch = tf.train.batch(
             [reshaped_image, label],
             batch_size= batch_size,
             allow_smaller_final_batch= True if not is_training else False,
             num_threads=args.num_threads,
             capacity=min_queue_examples+3 * batch_size)
-        return images, label_batch
+      return images, label_batch
     else:
       if hasattr(args, 'save_predictions') and args.save_predictions is not None:
         images, info = tf.train.batch(
