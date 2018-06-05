@@ -7,6 +7,8 @@ import sys
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
+import scipy.misc
+import matplotlib.image as mpimg
 
 # Parse the input file name
 def _read_label_file(file, delimiter):
@@ -18,6 +20,16 @@ def _read_label_file(file, delimiter):
     filepaths.append(tokens[0])
     labels.append(int(tokens[1]))
   return filepaths, labels
+
+def img_resize(add):
+  try:
+    img=mpimg.imread(add)
+    img=scipy.misc.imresize(img[0:-100,:],(256,256))
+    return img
+  except:
+    print("Severe Exception for: "+add)
+    return np.zeros((256,256,3),dtype=np.uint8)
+    #raise
 
 # Read input files
 def read_inputs(is_training, args, has_labels=True):
@@ -35,11 +47,12 @@ def read_inputs(is_training, args, has_labels=True):
       filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
 
   # Read examples from files in the filename queue.
-  file_content = tf.read_file(filename_queue[0])
+  #file_content = tf.read_file(filename_queue[0])
   # Read JPEG or PNG or GIF image from file
-  reshaped_image = tf.to_float(tf.image.decode_jpeg(file_content, channels=args.num_channels))
+  #reshaped_image = tf.to_float(tf.image.decode_jpeg(file_content, channels=args.num_channels))
   # Resize image to 256*256
-  reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
+  #reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
+  reshaped_image = tf.cast(tf.py_func(img_resize, [filename_queue[0]], tf.uint8),tf.float32)
 
   if has_labels:
     label = tf.cast(filename_queue[1], tf.int64)
