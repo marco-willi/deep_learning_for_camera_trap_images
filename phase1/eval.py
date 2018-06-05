@@ -8,6 +8,7 @@ from datetime import datetime
 import math
 import time
 import os
+import json
 
 import numpy as np
 import tensorflow as tf
@@ -66,16 +67,22 @@ def evaluate(args):
       true_topn_predictions_count = 0 # Counts correct top-n predictions
       all_count = 0 #Counts all images
       step = 0
-      predictions_format_str = ('%d,%s,%d,%s,%s\n')
+      #predictions_format_str = ('%d;%s;%d;%s;%s\n')
       batch_format_str = ('Batch Number: %d, Top-1 Hit: %d, Top-5 Hit: %d, Top-1 Accuracy: %.3f, Top-5 Accuracy: %.3f')
 
       out_file = open(args.save_predictions,'w')
+      # out_file.write('id', 'path', 'true', 'top_n_class', 'top_n_conf')
       while step < args.num_batches and not coord.should_stop():
         top1_predictions, topn_predictions, urls_values, label_values, topnguesses, topnconf = sess.run([top_1_op, top_n_op, urls, labels, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
-          out_file.write(predictions_format_str%(step*args.batch_size+i+1, urls_values[i], label_values[i],
-              '[' + ', '.join('%d' % item for item in topnguesses[i]) + ']',
-              '[' + ', '.join('%.4f' % item for item in topnconf[i]) + ']'))
+          step_result = {'row_id': step*args.batch_size+i+1,
+                         'path': urls_values[i],
+                         'true': label_values[i],
+                         'top_n_pred':  [item for item in topnguesses[i]],
+                         'top_n_conf': [item for item in topnconf[i]]
+                         }
+          json.dump(step_result, out_file)
+          out_file.write('\n')
           out_file.flush()
         true_predictions_count += np.sum(top1_predictions)
         true_topn_predictions_count += np.sum(topn_predictions)
