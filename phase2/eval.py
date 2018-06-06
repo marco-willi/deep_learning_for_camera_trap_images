@@ -8,6 +8,7 @@ from datetime import datetime
 import math
 import time
 import os
+import json
 
 import numpy as np
 import tensorflow as tf
@@ -123,14 +124,28 @@ def evaluate(args):
 
         top1_accuracy, top5_accuracy, top3_accuracy, urls_values, label_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf, obol_val, yval, zval, uval, ival = sess.run([top1acc, top5acc_id, top3acc_cn, urls, labels, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh, one_bin_off_loss, y_length, z_length, union_length, intersect_length])
         for i in xrange(0,urls_values.shape[0]):
-          out_file.write(predictions_format_str%(step*args.batch_size+i+1, urls_values[i],
-              '[' + ', '.join('%d' % np.asscalar(item) for item in label_values[i]) + ']',
-              '[' + ', '.join('%d' % np.asscalar(item) for item in top5guesses_id[i]) + ']',
-              '[' + ', '.join('%.3f' % np.asscalar(item) for item in top5conf[i]) + ']',
-              '[' + ', '.join('%d' % np.asscalar(item) for item in top3guesses_cn[i]) + ']',
-              '[' + ', '.join('%.3f' % np.asscalar(item) for item in top3conf[i]) + ']',
-              '[' + ', '.join('%d' % np.asscalar(item) for item in [top1guesses_bh[0][i],top1guesses_bh[1][i],top1guesses_bh[2][i],top1guesses_bh[3][i],top1guesses_bh[4][i],top1guesses_bh[5][i]]) + ']',
-              '[' + ', '.join('%.3f' % np.asscalar(item) for item in [top1conf[0][i],top1conf[1][i],top1conf[2][i],top1conf[3][i],top1conf[4][i],top1conf[5][i]]) + ']'))
+          step_result = {'row_id': int(step*args.batch_size+i+1),
+                         'path': urls_values[i],
+                         'true': [int(np.asscalar(item)) for item in label_values[i]],
+                         'top_n_pred':  [int(np.asscalar(item)) for item in top5guesses_id[i]],
+                         'top_n_conf': [round(float(np.asscalar(item)), 4) for item in top5conf[i]],
+                         'top_n_pred_count':  [int(np.asscalar(item)) for item in top3guesses_cn[i]],
+                         'top_n_conf_count': [round(float(np.asscalar(item)), 4) for item in top3conf[i]],
+                         'top_pred_standing': int(np.asscalar(top1guesses_bh[0][i])),
+                         'top_pred_resting': int(np.asscalar(top1guesses_bh[1][i])),
+                         'top_pred_moving': int(np.asscalar(top1guesses_bh[2][i])),
+                         'top_pred_eating': int(np.asscalar(top1guesses_bh[3][i])),
+                         'top_pred_interacting': int(np.asscalar(top1guesses_bh[4][i])),
+                         'top_pred_young_present': int(np.asscalar(top1guesses_bh[5][i])),
+                         'top_conf_standing': round(float(np.asscalar(top1conf[0][i])), 4),
+                         'top_conf_resting': round(float(np.asscalar(top1conf[1][i])), 4),
+                         'top_conf_moving': round(float(np.asscalar(top1conf[2][i])), 4),
+                         'top_conf_eating': round(float(np.asscalar(top1conf[3][i])), 4),
+                         'top_conf_interacting': round(float(np.asscalar(top1conf[4][i])), 4),
+                         'top_conf_young_present': round(float(np.asscalar(top1conf[5][i])), 4)
+                         }
+          json.dump(step_result, out_file)
+          out_file.write('\n')
           out_file.flush()
         total_examples+= uval.shape[0]
 
