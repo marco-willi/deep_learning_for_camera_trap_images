@@ -27,8 +27,8 @@ def predict(args):
 
         # Calculate predictions
         topn = tf.nn.top_k(tf.nn.softmax(logits), args.top_n)
-        topnind= topn.indices
-        topnval= topn.values
+        topnind = topn.indices
+        topnval = topn.values
 
         saver = tf.train.Saver(tf.global_variables())
 
@@ -55,28 +55,23 @@ def predict(args):
       coord = tf.train.Coordinator()
 
       threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-      all_count = 0 #Counts all images
       step = 0
-      predictions_format_str = ('%d,%s,%d,%s\n')
-      batch_format_str = ('Batch Number: %d, Top-1 Hit: %d, Top-5 Hit: %d, Top-1 Accuracy: %.3f, Top-5 Accuracy: %.3f')
 
       out_file = open(args.save_predictions,'w')
       while step < args.num_batches and not coord.should_stop():
-        top1_predictions, topn_predictions, urls_values, topnguesses, topnconf = sess.run([top_1_op, top_n_op, urls, topnind, topnval])
+        urls_values, topnguesses, topnconf = sess.run([urls, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
-            step_result = {'row_id': int(step*args.batch_size+i+1),
-                           'path': urls_values[i],
-                           'top_n_pred':  [int(item) for item in topnguesses[i]],
-                           'top_n_conf': [round(float(item), 4) for item in topnconf[i]]
+            step_result = {
+                'row_id': int(step*args.batch_size+i+1),
+                'path': urls_values[i],
+                'top_n_pred':  [int(item) for item in topnguesses[i]],
+                'top_n_conf': [round(float(item), 4) for item in topnconf[i]]
                            }
             json.dump(step_result, out_file)
             out_file.write('\n')
             out_file.flush()
-        all_count+= top1_predictions.shape[0]
         sys.stdout.flush()
         step += 1
-
-
       out_file.close()
 
       summary = tf.Summary()
@@ -100,7 +95,7 @@ def main():
   parser.add_argument('--architecture', default= 'resnet', help='The DNN architecture')
   parser.add_argument('--depth', default= 50, type= int, help= 'The depth of ResNet architecture')
   parser.add_argument('--log_dir', default= None, action= 'store', help='Path for saving Tensorboard info and checkpoints')
-  parser.add_argument('save_predictions', default= None, action= 'store', help= 'Save top-5 predictions of the networks along with their confidence in the specified file')
+  parser.add_argument('--save_predictions', default= None, action= 'store', help= 'Save top-5 predictions of the networks along with their confidence in the specified file')
 
   args = parser.parse_args()
   args.num_samples = sum(1 for line in open(args.data_info))
