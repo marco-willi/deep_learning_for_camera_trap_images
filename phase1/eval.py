@@ -90,7 +90,7 @@ def evaluate(args):
                          }
           out_file.write(str(int(step*args.batch_size+i+1)) + ':')
           json.dump(step_result, out_file)
-          if run_condition
+          if run_condition:
             out_file.write(',')
           out_file.flush()
 
