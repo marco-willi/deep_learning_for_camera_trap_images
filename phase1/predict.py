@@ -10,6 +10,7 @@ import argparse
 import arch
 import data_loader
 import sys
+import json
 
 
 def predict(args):
@@ -63,10 +64,14 @@ def predict(args):
       while step < args.num_batches and not coord.should_stop():
         top1_predictions, topn_predictions, urls_values, topnguesses, topnconf = sess.run([top_1_op, top_n_op, urls, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
-          out_file.write(predictions_format_str%(step*args.batch_size+i+1, urls_values[i],
-              '[' + ', '.join('%d' % item for item in topnguesses[i]) + ']',
-              '[' + ', '.join('%.4f' % item for item in topnconf[i]) + ']'))
-          out_file.flush()
+            step_result = {'row_id': int(step*args.batch_size+i+1),
+                           'path': urls_values[i],
+                           'top_n_pred':  [int(item) for item in topnguesses[i]],
+                           'top_n_conf': [round(float(item), 4) for item in topnconf[i]]
+                           }
+            json.dump(step_result, out_file)
+            out_file.write('\n')
+            out_file.flush()
         all_count+= top1_predictions.shape[0]
         sys.stdout.flush()
         step += 1
