@@ -88,7 +88,7 @@ def evaluate(args):
                          'top_n_pred':  [int(item) for item in topnguesses[i]],
                          'top_n_conf': [round(float(item), 3) for item in topnconf[i]]
                          }
-          out_file.write(str(int(step*args.batch_size+i+1)) + ':')
+          out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
           json.dump(step_result, out_file)
           if run_condition:
             out_file.write(',')
