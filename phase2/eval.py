@@ -114,18 +114,17 @@ def evaluate(args):
 
       one_bin_off_val = 0
       step = 0
-      predictions_format_str = ('%d,%s,%s,%s,%s,%s,%s,%s,%s]\n')
       batch_format_str = ('Batch Number: %d, Top-1 Accuracy: %s, Top-5 Accuracy: %.3f, Top-3 Accuracy: %.3f, One bin off Loss: %.3f, Accuracy: %.3f, Precision: %.3f, Recall: %.3f')
 
       # Output file to save predictions and their confidences
       out_file = open(args.save_predictions,'w')
-
+      out_file.write('{')
+      first_row = True
       while step < args.num_batches and not coord.should_stop():
 
         top1_accuracy, top5_accuracy, top3_accuracy, urls_values, label_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf, obol_val, yval, zval, uval, ival = sess.run([top1acc, top5acc_id, top3acc_cn, urls, labels, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh, one_bin_off_loss, y_length, z_length, union_length, intersect_length])
         for i in xrange(0,urls_values.shape[0]):
-          step_result = {'row_id': int(step*args.batch_size+i+1),
-                         'path': urls_values[i],
+          step_result = {'path': urls_values[i],
                          'true': [int(np.asscalar(item)) for item in label_values[i]],
                          'top_n_pred':  [int(np.asscalar(item)) for item in top5guesses_id[i]],
                          'top_n_conf': [round(float(np.asscalar(item)), 4) for item in top5conf[i]],
@@ -144,8 +143,12 @@ def evaluate(args):
                          'top_conf_interacting': round(float(np.asscalar(top1conf[4][i])), 4),
                          'top_conf_young_present': round(float(np.asscalar(top1conf[5][i])), 4)
                          }
+          if first_row:
+            out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
+            first_row = False
+          else:
+            out_file.write('\n,"' + str(int(step*args.batch_size+i+1)) + '":')
           json.dump(step_result, out_file)
-          out_file.write('\n')
           out_file.flush()
         total_examples+= uval.shape[0]
 
@@ -178,6 +181,7 @@ def evaluate(args):
         sys.stdout.flush()
         step += 1
 
+      out_file.write('}')
       out_file.close()
 
       summary = tf.Summary()

@@ -58,20 +58,27 @@ def predict(args):
       step = 0
 
       out_file = open(args.save_predictions,'w')
+      out_file.write('{')
+      first_row = True
       while step < args.num_batches and not coord.should_stop():
         urls_values, topnguesses, topnconf = sess.run([urls, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
             step_result = {
-                'row_id': int(step*args.batch_size+i+1),
                 'path': urls_values[i],
                 'top_n_pred':  [int(item) for item in topnguesses[i]],
                 'top_n_conf': [round(float(item), 4) for item in topnconf[i]]
                            }
+            if first_row:
+              out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
+              first_row = False
+            else:
+              out_file.write(',"' + str(int(step*args.batch_size+i+1)) + '":')
             json.dump(step_result, out_file)
             out_file.write('\n')
             out_file.flush()
         sys.stdout.flush()
         step += 1
+      out_file.write('}')
       out_file.close()
 
       summary = tf.Summary()
