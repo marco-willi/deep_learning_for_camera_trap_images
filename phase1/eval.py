@@ -75,11 +75,11 @@ def evaluate(args):
       while step < args.num_batches and not coord.should_stop():
         top1_predictions, topn_predictions, urls_values, label_values, topnguesses, topnconf = sess.run([top_1_op, top_n_op, urls, labels, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
-          step_result = {'row_id': step*args.batch_size+i+1,
+          step_result = {'row_id': int(step*args.batch_size+i+1),
                          'path': urls_values[i],
-                         'true': label_values[i],
-                         'top_n_pred':  [item for item in topnguesses[i]],
-                         'top_n_conf': [item for item in topnconf[i]]
+                         'true': int(label_values[i]),
+                         'top_n_pred':  [int(item) for item in topnguesses[i]],
+                         'top_n_conf': [round(float(item), 3) for item in topnconf[i]]
                          }
           json.dump(step_result, out_file)
           out_file.write('\n')
