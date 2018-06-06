@@ -73,25 +73,21 @@ def evaluate(args):
       out_file = open(args.save_predictions,'w')
       out_file.write('{')
       # out_file.write('id', 'path', 'true', 'top_n_class', 'top_n_conf')
-      run_condition = step < args.num_batches and not coord.should_stop()
-      while run_condition:
+      first_row = True
+      while step < args.num_batches and not coord.should_stop():
         top1_predictions, topn_predictions, urls_values, label_values, topnguesses, topnconf = sess.run([top_1_op, top_n_op, urls, labels, topnind, topnval])
         for i in xrange(0,urls_values.shape[0]):
-          # step_result = {'row_id': int(step*args.batch_size+i+1),
-          #                'path': urls_values[i],
-          #                'true': int(label_values[i]),
-          #                'top_n_pred':  [int(item) for item in topnguesses[i]],
-          #                'top_n_conf': [round(float(item), 3) for item in topnconf[i]]
-          #                }
           step_result = {'path': urls_values[i],
                          'true': int(label_values[i]),
                          'top_n_pred':  [int(item) for item in topnguesses[i]],
                          'top_n_conf': [round(float(item), 3) for item in topnconf[i]]
                          }
-          out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
+          if first_row:
+            out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
+            first_row = False
+          else:
+            out_file.write(',"' + str(int(step*args.batch_size+i+1)) + '":')
           json.dump(step_result, out_file)
-          if run_condition:
-            out_file.write(',')
           out_file.flush()
 
         true_predictions_count += np.sum(top1_predictions)
