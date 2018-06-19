@@ -49,7 +49,6 @@ def read_inputs(is_training, args, has_labels=True):
   if is_training:
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= args.shuffle, capacity= 1024)
   else:
-    print("Reading filenames %s and labels %s" % (filenames[0:5], labels[0:5]))
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
 
   # Read examples from files in the filename queue.
