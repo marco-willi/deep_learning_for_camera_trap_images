@@ -41,7 +41,7 @@ def _read_label_file(file, delimiter):
   for line in f:
     tokens = line.split(delimiter)
     filepaths.append(tokens[0])
-    labels.append(_process_label(tokens[2:]))
+    labels.append(_process_label(tokens[1:]))
   return filepaths, np.vstack(labels)
 
 

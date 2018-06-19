@@ -77,13 +77,13 @@ def evaluate(args):
 
       # Output file to save predictions and their confidences
       out_file = open(args.save_predictions,'w')
-
+      out_file.write('{')
+      first_row = True
       while step < args.num_batches and not coord.should_stop():
 
         urls_values, label_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf= sess.run([urls, labels, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh])
         for i in xrange(0,urls_values.shape[0]):
-          step_result = {'row_id': int(step*args.batch_size+i+1),
-                         'path': urls_values[i],
+          step_result = {'path': urls_values[i],
                          'top_n_pred':  [int(np.asscalar(item)) for item in top5guesses_id[i]],
                          'top_n_conf': [round(float(np.asscalar(item)), 4) for item in top5conf[i]],
                          'top_n_pred_count':  [int(np.asscalar(item)) for item in top3guesses_cn[i]],
@@ -101,12 +101,17 @@ def evaluate(args):
                          'top_conf_interacting': round(float(np.asscalar(top1conf[4][i])), 4),
                          'top_conf_young_present': round(float(np.asscalar(top1conf[5][i])), 4)
                          }
+          if first_row:
+            out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
+            first_row = False
+          else:
+            out_file.write(',\n"' + str(int(step*args.batch_size+i+1)) + '":')
           json.dump(step_result, out_file)
-          out_file.write('\n')
+
           out_file.flush()
         sys.stdout.flush()
         step += 1
-
+      out_file.write('}')
       out_file.close()
 
       summary = tf.Summary()

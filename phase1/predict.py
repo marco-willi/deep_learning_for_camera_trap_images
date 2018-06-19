@@ -72,9 +72,8 @@ def predict(args):
               out_file.write('"' + str(int(step*args.batch_size+i+1)) + '":')
               first_row = False
             else:
-              out_file.write(',"' + str(int(step*args.batch_size+i+1)) + '":')
+              out_file.write(',\n"' + str(int(step*args.batch_size+i+1)) + '":')
             json.dump(step_result, out_file)
-            out_file.write('\n')
             out_file.flush()
         sys.stdout.flush()
         step += 1
