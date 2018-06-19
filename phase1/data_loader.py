@@ -11,14 +11,14 @@ import scipy.misc
 import matplotlib.image as mpimg
 
 # Parse the input file name
-def _read_label_file(file, delimiter, labels=True):
+def _read_label_file(file, delimiter, has_labels=True):
   f = open(file, "r")
   filepaths = []
   labels = []
   for line in f:
     tokens = line.split(delimiter)
     filepaths.append(tokens[0])
-    if labels:
+    if has_labels:
       labels.append(int(tokens[1]))
   return filepaths, labels
 
