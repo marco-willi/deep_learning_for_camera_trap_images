@@ -81,7 +81,7 @@ def predict(args):
       first_row = True
       while step < args.num_batches and not coord.should_stop():
 
-        urls_values, label_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf= sess.run([urls, labels, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh])
+        urls_values, top5guesses_id, top5conf, top3guesses_cn, top3conf, top1guesses_bh, top1conf= sess.run([urls, top5ind_id, top5val_id, top3ind_cn, top3val_cn, top1ind_bh, top1val_bh])
         for i in xrange(0,urls_values.shape[0]):
           step_result = {'path': urls_values[i],
                          'top_n_pred':  [int(np.asscalar(item)) for item in top5guesses_id[i]],
@@ -109,7 +109,9 @@ def predict(args):
           json.dump(step_result, out_file)
 
           out_file.flush()
+          print("Finished predicting batch %s / %s" % (step, args.num_batches))
         sys.stdout.flush()
+
         step += 1
       out_file.write('}')
       out_file.close()
