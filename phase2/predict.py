@@ -109,7 +109,7 @@ def predict(args):
           json.dump(step_result, out_file)
 
           out_file.flush()
-          print("Finished predicting batch %s / %s" % (step, args.num_batches))
+        print("Finished predicting batch %s / %s" % (step, args.num_batches))
         sys.stdout.flush()
 
         step += 1
