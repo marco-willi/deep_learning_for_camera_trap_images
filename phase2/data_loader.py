@@ -34,15 +34,20 @@ def _process_label(label):
 
 
 # Parse the input file name
-def _read_label_file(file, delimiter):
+def _read_label_file(file, delimiter, labels=True):
   f = open(file, "r")
   filepaths = []
   labels = []
   for line in f:
     tokens = line.split(delimiter)
     filepaths.append(tokens[0])
-    labels.append(_process_label(tokens[1:]))
-  return filepaths, np.vstack(labels)
+    if labels:
+        labels.append(_process_label(tokens[1:]))
+  if labels:
+    return filepaths, np.vstack(labels)
+  else:
+    return filepaths, labels
+
 
 
 def img_resize(add):
@@ -55,9 +60,9 @@ def img_resize(add):
     return np.zeros((256,256,3),dtype=np.uint8)
     #raise
 
-def read_inputs(is_training, args):
+def read_inputs(is_training, args, has_labels=True):
 
-  filepaths, labels = _read_label_file(args.data_info, args.delimiter)
+  filepaths, labels = _read_label_file(args.data_info, args.delimiter, has_labels)
 
   filenames = [os.path.join(args.path_prefix,i) for i in filepaths]
 
@@ -65,8 +70,10 @@ def read_inputs(is_training, args):
   if is_training:
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= args.shuffle, capacity= 1024)
   else:
-    filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
-
+    if has_labels:
+      filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
+    else:
+      filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
   # Read examples from files in the filename queue.
   #file_content = tf.read_file(filename_queue[0])
   # Read JPEG or PNG or GIF image from file
@@ -75,7 +82,8 @@ def read_inputs(is_training, args):
   #reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
   reshaped_image = tf.cast(tf.py_func(img_resize, [filename_queue[0]], tf.uint8),tf.float32)
 
-  label = tf.cast(filename_queue[1], tf.int64)
+  if has_labels:
+      label = tf.cast(filename_queue[1], tf.int64)
   img_info = filename_queue[0]
 
   if is_training:
@@ -93,22 +101,35 @@ def read_inputs(is_training, args):
   batch_size = args.chunked_batch_size if is_training else args.batch_size
 
   # Load images and labels with additional info
-  if hasattr(args, 'save_predictions') and args.save_predictions is not None:
-    images, label_batch, info = tf.train.batch(
-        [reshaped_image, label, img_info],
-        batch_size= batch_size,
-        num_threads=args.num_threads,
-        capacity=min_queue_examples+3 * batch_size,
-        allow_smaller_final_batch=True if not is_training else False)
-    return images, label_batch, info
+  if has_labels:
+    if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+      images, label_batch, info = tf.train.batch(
+           [reshaped_image, label, img_info],
+           batch_size= batch_size,
+           num_threads=args.num_threads,
+           capacity=min_queue_examples+3 * batch_size,
+           allow_smaller_final_batch=True if not is_training else False)
+      return images, label_batch, info
+    else:
+      images, label_batch = tf.train.batch(
+           [reshaped_image, label],
+           batch_size= batch_size,
+           allow_smaller_final_batch= True if not is_training else False,
+           num_threads=args.num_threads,
+           capacity=min_queue_examples+3 * batch_size)
+      return images, label_batch
   else:
-    images, label_batch = tf.train.batch(
-        [reshaped_image, label],
-        batch_size= batch_size,
-        allow_smaller_final_batch= True if not is_training else False,
-        num_threads=args.num_threads,
-        capacity=min_queue_examples+3 * batch_size)
-    return images, label_batch
+    if hasattr(args, 'save_predictions') and args.save_predictions is not None:
+      images, info = tf.train.batch(
+           [reshaped_image, img_info],
+           batch_size= batch_size,
+           num_threads=args.num_threads,
+           capacity=min_queue_examples+3 * batch_size,
+           allow_smaller_final_batch=True if not is_training else False)
+      return images, info
+    else:
+      #TODO: Raise error
+      pass
 
 
 def _train_preprocess(reshaped_image, args):

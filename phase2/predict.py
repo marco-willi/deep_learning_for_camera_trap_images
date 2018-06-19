@@ -18,12 +18,12 @@ import data_loader
 import sys
 
 
-def evaluate(args):
+def predict(args):
 
   # Building the graph
   with tf.Graph().as_default() as g, tf.device('/cpu:0'):
     # Get images and labels.
-    images, labels, urls = data_loader.read_inputs(False, args)
+    images, urls = data_loader.read_inputs(False, args, False)
     # Performing computations on a GPU
     with tf.device('/gpu:0'):
       # Build a Graph that computes the logits predictions from the
@@ -146,7 +146,7 @@ def main():
 
   print(args)
 
-  evaluate(args)
+  predict(args)
 
 
 if __name__ == '__main__':

@@ -11,15 +11,17 @@ import scipy.misc
 import matplotlib.image as mpimg
 
 # Parse the input file name
-def _read_label_file(file, delimiter):
+def _read_label_file(file, delimiter, labels=True):
   f = open(file, "r")
   filepaths = []
   labels = []
   for line in f:
     tokens = line.split(delimiter)
     filepaths.append(tokens[0])
-    labels.append(int(tokens[1]))
+    if labels:
+      labels.append(int(tokens[1]))
   return filepaths, labels
+
 
 def img_resize(add):
   try:
@@ -33,7 +35,7 @@ def img_resize(add):
 
 # Read input files
 def read_inputs(is_training, args, has_labels=True):
-  filepaths, labels = _read_label_file(args.data_info, args.delimiter)
+  filepaths, labels = _read_label_file(args.data_info, args.delimiter, has_labels)
 
   filenames = [os.path.join(args.path_prefix,i) for i in filepaths]
 
