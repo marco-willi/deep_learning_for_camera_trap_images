@@ -5,6 +5,8 @@ from __future__ import print_function
 import os
 import sys
 
+import numpy as np
+
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 import scipy.misc

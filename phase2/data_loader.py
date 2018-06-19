@@ -5,6 +5,8 @@ from __future__ import print_function
 import os
 import sys
 
+import numpy as np
+
 from six.moves import xrange
 import numpy as np
 import tensorflow as tf
