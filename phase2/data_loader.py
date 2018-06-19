@@ -42,7 +42,10 @@ def _read_label_file(file, delimiter, has_labels=True):
     tokens = line.split(delimiter)
     filepaths.append(tokens[0])
     if has_labels:
-        labels.append(_process_label(tokens[1:]))
+      labels.append(_process_label(tokens[1:]))
+    else:
+      # append dummy label
+      labels.append(0)
   if has_labels:
     return filepaths, np.vstack(labels)
   else:
@@ -70,10 +73,8 @@ def read_inputs(is_training, args, has_labels=True):
   if is_training:
     filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= args.shuffle, capacity= 1024)
   else:
-    if has_labels:
-      filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
-    else:
-      filename_queue = tf.train.slice_input_producer([filenames], shuffle= False,  capacity= 1024, num_epochs =1)
+    filename_queue = tf.train.slice_input_producer([filenames, labels], shuffle= False,  capacity= 1024, num_epochs =1)
+
   # Read examples from files in the filename queue.
   #file_content = tf.read_file(filename_queue[0])
   # Read JPEG or PNG or GIF image from file
@@ -82,8 +83,7 @@ def read_inputs(is_training, args, has_labels=True):
   #reshaped_image = tf.image.resize_images(reshaped_image, args.load_size)
   reshaped_image = tf.cast(tf.py_func(img_resize, [filename_queue[0]], tf.uint8),tf.float32)
 
-  if has_labels:
-      label = tf.cast(filename_queue[1], tf.int64)
+  label = tf.cast(filename_queue[1], tf.int64)
   img_info = filename_queue[0]
 
   if is_training:
