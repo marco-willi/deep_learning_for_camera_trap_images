@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import os
 import sys
+import csv
 
 import numpy as np
 
@@ -14,17 +15,17 @@ import matplotlib.image as mpimg
 
 # Parse the input file name
 def _read_label_file(file, delimiter, has_labels=True):
-  f = open(file, "r")
   filepaths = []
   labels = []
-  for line in f:
-    tokens = line.split(delimiter)
-    filepaths.append(tokens[0])
-    if has_labels:
-      labels.append(int(tokens[1]))
-    else:
-      # append dummy label
-      labels.append(0)
+  with open(file, 'r') as f:
+    csvreader = csv.reader(f, delimiter=delimiter)
+    for tokens in csvreader:
+      filepaths.append(tokens[0])
+      if has_labels:
+        labels.append(int(tokens[1]))
+      else:
+        # append dummy label
+        labels.append(0)
   return filepaths, labels
 
 
